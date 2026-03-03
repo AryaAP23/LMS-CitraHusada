@@ -7,27 +7,78 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## About Laravel
+## Tentang Proyek
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+LMS-CitraHusada adalah aplikasi Learning Management System berbasis Laravel
+yang dikustomisasi untuk kebutuhan internal institusi kesehatan. Fitur utama
+meliputi manajemen materi pembelajaran, sub-materi, post-test, sertifikat,
+serta pengelolaan pengguna, unit kerja, dan jenis tenaga.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Proyek ini merupakan turunan dari kerangka kerja Laravel; panduan instalasi dan
+fitur umum masih merujuk dokumentasi Laravel resmi, tetapi README ini menyajikan
+petunjuk cepat konfigurasi dan penggunaan khusus repo ini.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Persiapan Lingkungan
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+1. Clone repositori:
+   ```bash
+   git clone https://github.com/AryaAP23/LMS-CitraHusada.git
+   cd LMS-CitraHusada
+   ```
+2. Install dependensi PHP dan JavaScript:
+   ```bash
+   composer install
+   npm install && npm run dev
+   ```
+3. Salin file konfigurasi .env dan atur koneksi database:
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+4. Jalankan migrasi dan seeder (refresh jika perlu):
+   ```bash
+   php artisan migrate --seed
+   # atau untuk reset lengkap:
+   php artisan migrate:refresh --seed
+   ```
+5. Jika ingin mengisi ulang tabel `unit_kerjas` saja setelah seeder diperbaiki:
+   ```bash
+   php artisan db:seed --class=UnitKerjaSeeder
+   ```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Struktur Database
+
+Tabel utama mencakup:
+
+- users (relasi ke roles, unit_kerjas, jenis_tenagas)
+- roles, unit_kerjas, jenis_tenagas
+- materis, sub_materis, post_tests
+- materi_jenis_tenagas, materi_unit_kerjas (pivot)
+- sertifikats, _login__texts
+
+Dokumentasi migrasi tersedia di `database/migrations` untuk membantu pemahaman.
+
+---
+
+## Kontribusi
+
+Silakan buat PR ke cabang `main` dan ikuti standar coding Laravel. Pastikan
+menambahkan dokumentasi bila migrasi atau model baru dibuat.
+
+---
+
+## Lisensi
+
+MIT License (sama seperti Laravel).  
+
+---
+
+> Catatan: Bagian awal README default Laravel tetap ada untuk referensi umum, tetapi
+> informasi proyek lebih spesifik sudah ditambahkan di atas.
 
 We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 

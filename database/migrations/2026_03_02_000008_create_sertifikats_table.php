@@ -3,7 +3,7 @@
 /**
  * Migrasi: membuat tabel `sertifikats`.
  *
- * Menyimpan data sertifikat yang di-upload oleh pengguna, termasuk
+ * Menyimpan data sertifikat, termasuk
  * status persetujuan (enum: belum, disetujui, tidak disetujui). Relasi
  * ke tabel `users` dengan cascade delete sehingga sertifikat akan
  * hilang jika pengguna dihapus.
