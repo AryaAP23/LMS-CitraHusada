@@ -25,5 +25,11 @@ class DatabaseSeeder extends Seeder
 
         // Call seeder untuk unit kerja
         $this->call(UnitKerjaSeeder::class);
+
+        // optional texts shown on login page
+        $this->call(LoginTextSeeder::class);
+
+        // create default admin user
+        $this->call(UserSeeder::class);
     }
 }

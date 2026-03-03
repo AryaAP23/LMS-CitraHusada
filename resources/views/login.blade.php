@@ -23,11 +23,17 @@
             <p id="dynamicText" class="text-gray-500 text-sm mt-1">
                 Kata kata dapat berubah setiap di load
             </p>
-            
         </div>
 
+        {{-- error message --}}
+        @if($errors->any())
+            <div class="mb-4 text-red-600">
+                {{ $errors->first() }}
+            </div>
+        @endif
+
         {{-- Form --}}
-        <form action="{{ route('login') }}" method="POST" class="space-y-5">
+        <form action="{{ route('login.post') }}" method="POST" class="space-y-5">
             @csrf
 
             {{-- Nomor Induk --}}
