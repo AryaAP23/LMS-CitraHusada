@@ -43,6 +43,11 @@ petunjuk cepat konfigurasi dan penggunaan khusus repo ini.
    # atau untuk reset lengkap:
    php artisan migrate:refresh --seed
    ```
+
+   Setelah seeder dijalankan, akun default tersedia untuk pengujian:
+   - **NIK**: `admin`
+   - **Password**: `password`
+
 5. Jika ingin mengisi ulang tabel `unit_kerjas` saja setelah seeder diperbaiki:
    ```bash
    php artisan db:seed --class=UnitKerjaSeeder
