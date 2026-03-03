@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
     {
         // Seed basic roles
         Role::firstOrCreate(['role_id' => 1], ['role' => 'Super admin']);
-        Role::firstOrCreate(['role_id' => 2], ['role' => 'User']);
+        Role::firstOrCreate(['role_id' => 2], ['role' => 'Admin']);
 
         // Call seeder untuk jenis tenaga
         $this->call(JenisTenagaSeeder::class);

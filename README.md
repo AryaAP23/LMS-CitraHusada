@@ -48,6 +48,14 @@ petunjuk cepat konfigurasi dan penggunaan khusus repo ini.
    - **NIK**: `admin`
    - **Password**: `password`
 
+   ⚠️ Jika Anda pernah memasukkan password langsung ke database (misalnya saat
+   mencoba tinker) dan tidak di-hash, sistem akan melempar error karena Laravel
+   mengharapkan hash bcrypt. Seeder `UserSeeder` sekarang otomatis memperbaiki
+   semua password yang belum di-hash. Untuk menerapkannya ulang, jalankan:
+   ```bash
+   php artisan db:seed --class=UserSeeder
+   ```
+
 5. Jika ingin mengisi ulang tabel `unit_kerjas` saja setelah seeder diperbaiki:
    ```bash
    php artisan db:seed --class=UnitKerjaSeeder
