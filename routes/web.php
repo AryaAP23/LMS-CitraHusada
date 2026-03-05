@@ -18,6 +18,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/materi-progress', function () {
         return view('materi-progress');
     });
+
+    Route::get('/materi-selesai', function () {
+    return view('materi-selesai');
+    });
     
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
