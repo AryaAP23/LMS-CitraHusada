@@ -1,6 +1,23 @@
 @extends('components.layout')
 @section('title', 'pembelajaran')
 @section('content')
+
+<script>
+// Check authentication on page load
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        const response = await axios.get('/api/check-auth');
+        if (!response.data.success) {
+            // User belum login, redirect ke halaman login
+            window.location.href = '/';
+        }
+    } catch (error) {
+        // Error checking auth, redirect ke login
+        window.location.href = '/';
+    }
+});
+</script>
+
 <div class="flex min-h-screen">
 
     <!-- SIDEBAR -->
@@ -34,6 +51,7 @@
 
         <div class="p-4 border-t border-gray-200">
             <a href="#" 
+            onclick="handleLogout(event)"
             class="flex items-center gap-2 text-red-600 
                     hover:text-red-800 transition duration-200">
                 <i class="fa-solid fa-arrow-left"></i>
@@ -259,4 +277,29 @@
 
     </main>
 </div>
+
+<script>
+async function handleLogout(event) {
+    event.preventDefault();
+
+    if (!confirm('Apakah Anda yakin ingin keluar?')) {
+        return;
+    }
+
+    try {
+        const response = await axios.post('/api/logout');
+
+        if (response.data.success) {
+            window.location.href = '/';
+        } else {
+            alert(response.data.message);
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+        // Fallback ke redirect langsung jika ada error
+        window.location.href = '/';
+    }
+}
+</script>
+
 @endsection

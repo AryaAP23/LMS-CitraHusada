@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - LMS</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #333; margin-bottom: 20px; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+        
+        .test-box { 
+            border: 1px solid #ddd; 
+            padding: 15px; 
+            border-radius: 8px; 
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-box h3 { color: #007bff; margin-bottom: 10px; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        
+        input, textarea { 
+            width: 100%; 
+            padding: 8px; 
+            margin: 5px 0; 
+            border: 1px solid #ddd; 
+            border-radius: 4px;
+            font-family: Arial;
+        }
+        
+        button { 
+            padding: 10px 15px; 
+            margin: 5px 5px 5px 0; 
+            cursor: pointer; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        button:hover { background: #0056b3; }
+        button.danger { background: #dc3545; }
+        button.danger:hover { background: #c82333; }
+        button.success { background: #28a745; }
+        button.success:hover { background: #218838; }
+        
+        pre { 
+            background: #f5f5f5; 
+            padding: 10px; 
+            border-radius: 4px; 
+            overflow-x: auto; 
+            font-size: 12px;
+            border: 1px solid #ddd;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .success { background: #d4edda; border-left: 4px solid #28a745; padding-left: 10px; color: #155724; margin: 10px 0; }
+        .error { background: #f8d7da; border-left: 4px solid #dc3545; padding-left: 10px; color: #721c24; margin: 10px 0; }
+        .info { background: #d1ecf1; border-left: 4px solid #17a2b8; padding-left: 10px; color: #0c5460; margin: 10px 0; }
+        
+        .form-group { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 API CRUD Test - Jenis Tenaga</h1>
+        
+        <div class="grid">
+            <!-- GET ALL -->
+            <div class="test-box">
+                <h3>📖 GET - Semua Data</h3>
+                <p>Ambil semua data jenis tenaga dari database</p>
+                <button onclick="testGetAll()" class="success">Test GET All</button>
+                <pre id="getAll-result">Hasil akan tampil di sini...</pre>
+            </div>
+
+            <!-- GET AVAILABLE USERS -->
+            <div class="test-box">
+                <h3>👥 GET - Users Available</h3>
+                <p>Lihat daftar user yang tersedia untuk login</p>
+                <button onclick="testGetUsers()" class="success">Load Users</button>
+                <pre id="getUsers-result">Hasil akan tampil di sini...</pre>
+            </div>
+            <div class="test-box">
+                <h3>🔍 GET - Detail Data</h3>
+                <div class="form-group">
+                    <label>ID Jenis Tenaga:</label>
+                    <input type="number" id="getIdInput" value="1" placeholder="Masukkan ID" />
+                </div>
+                <button onclick="testGetOne()" class="success">Test GET One</button>
+                <pre id="getOne-result">Hasil akan tampil di sini...</pre>
+            </div>
+
+            <!-- CREATE -->
+            <div class="test-box">
+                <h3>➕ POST - Buat Data Baru</h3>
+                <div class="form-group">
+                    <label>Nama Jenis Tenaga:</label>
+                    <input type="text" id="createNameInput" placeholder="Contoh: Teknisi Medis" />
+                </div>
+                <button onclick="testCreate()" class="success">Test POST / Create</button>
+                <pre id="create-result">Hasil akan tampil di sini...</pre>
+            </div>
+
+            <!-- UPDATE -->
+            <div class="test-box">
+                <h3>✏️ PUT - Update Data</h3>
+                <div class="form-group">
+                    <label>ID Jenis Tenaga:</label>
+                    <input type="number" id="updateIdInput" value="1" placeholder="Masukkan ID untuk di-update" />
+                </div>
+                <div class="form-group">
+                    <label>Nama Baru:</label>
+                    <input type="text" id="updateNameInput" placeholder="Nama baru untuk jenis tenaga" />
+                </div>
+                <button onclick="testUpdate()" class="success">Test PUT / Update</button>
+                <pre id="update-result">Hasil akan tampil di sini...</pre>
+            </div>
+
+            <!-- DELETE -->
+            <div class="test-box">
+                <h3>🗑️ DELETE - Hapus Data</h3>
+                <div class="form-group">
+                    <label>ID Jenis Tenaga:</label>
+                    <input type="number" id="deleteIdInput" value="99" placeholder="ID yang akan dihapus" />
+                </div>
+                <button onclick="testDelete()" class="danger">Test DELETE</button>
+                <pre id="delete-result">Hasil akan tampil di sini...</pre>
+            </div>
+
+            <!-- LOGIN -->
+            <div class="test-box">
+                <h3>🔐 POST - Login (Para Tes Auth)</h3>
+                <div class="form-group">
+                    <label>NIK:</label>
+                    <input type="text" id="nikInput" value="admin" />
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="pwInput" value="password" />
+                </div>
+                <button onclick="testLogin()" class="success">Test Login</button>
+                <pre id="login-result">Hasil akan tampil di sini...</pre>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="test-box">
+            <h3>📊 Test Summary & Dokumentasi API</h3>
+            <div class="info">
+                <strong>Base URL:</strong> http://localhost:8000/api<br>
+                <strong>Status Test:</strong> <span id="testStatus">Belum ada test yang dijalankan</span>
+            </div>
+            <hr style="margin: 10px 0;">
+            <h4>Endpoint yang Tersedia:</h4>
+            <ul style="margin-left: 20px;">
+                <li><strong>GET /api/jenis-tenaga</strong> - Ambil semua data (public)</li>
+                <li><strong>GET /api/jenis-tenaga/{id}</strong> - Ambil data spesifik (public)</li>
+                <li><strong>POST /api/jenis-tenaga</strong> - Buat data baru (protected)</li>
+                <li><strong>PUT /api/jenis-tenaga/{id}</strong> - Update data (protected)</li>
+                <li><strong>DELETE /api/jenis-tenaga/{id}</strong> - Hapus data (protected)</li>
+                <li><strong>POST /api/login</strong> - Login (public)</li>
+                <li><strong>POST /api/logout</strong> - Logout (protected)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let testCount = 0;
+        let successCount = 0;
+        
+        function updateTestStatus() {
+            const status = `${successCount}/${testCount} tests passed`;
+            document.getElementById('testStatus').textContent = status;
+        }
+
+        function showResult(elementId, isSuccess, data) {
+            testCount++;
+            if (isSuccess) successCount++;
+            updateTestStatus();
+            
+            const element = document.getElementById(elementId);
+            const className = isSuccess ? 'success' : 'error';
+            const icon = isSuccess ? '✓' : '✗';
+            
+            element.innerHTML = `<div class="${className}"><strong>${icon} ${isSuccess ? 'SUCCESS' : 'ERROR'}</strong></div>` +
+                               `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        async function testGetAll() {
+            try {
+                const response = await axios.get('/api/jenis-tenaga');
+                showResult('getAll-result', true, response.data);
+            } catch (error) {
+                showResult('getAll-result', false, error.response?.data || error.message);
+            }
+        }
+
+        async function testGetUsers() {
+            try {
+                const response = await axios.get('/api/debug-users');
+                showResult('getUsers-result', true, response.data);
+            } catch (error) {
+                showResult('getUsers-result', false, error.response?.data || error.message);
+            }
+        }
+
+        async function testGetOne() {
+            try {
+                const id = document.getElementById('getIdInput').value;
+                if (!id) throw new Error('ID harus diisi');
+                const response = await axios.get(`/api/jenis-tenaga/${id}`);
+                showResult('getOne-result', true, response.data);
+            } catch (error) {
+                showResult('getOne-result', false, error.response?.data || error.message);
+            }
+        }
+
+        async function testCreate() {
+            try {
+                const name = document.getElementById('createNameInput').value;
+                if (!name) throw new Error('Nama harus diisi');
+                const response = await axios.post('/api/jenis-tenaga', { jenis_tenaga: name });
+                showResult('create-result', true, response.data);
+                // Clear input after success
+                document.getElementById('createNameInput').value = '';
+            } catch (error) {
+                showResult('create-result', false, error.response?.data || error.message);
+            }
+        }
+
+        async function testUpdate() {
+            try {
+                const id = document.getElementById('updateIdInput').value;
+                const name = document.getElementById('updateNameInput').value;
+                if (!id) throw new Error('ID harus diisi');
+                if (!name) throw new Error('Nama baru harus diisi');
+                const response = await axios.put(`/api/jenis-tenaga/${id}`, { jenis_tenaga: name });
+                showResult('update-result', true, response.data);
+                // Clear input after success
+                document.getElementById('updateNameInput').value = '';
+            } catch (error) {
+                showResult('update-result', false, error.response?.data || error.message);
+            }
+        }
+
+        async function testDelete() {
+            try {
+                const id = document.getElementById('deleteIdInput').value;
+                if (!id) throw new Error('ID harus diisi');
+                if (!confirm(`Yakin ingin menghapus data dengan ID ${id}?`)) {
+                    return;
+                }
+                const response = await axios.delete(`/api/jenis-tenaga/${id}`);
+                showResult('delete-result', true, response.data);
+            } catch (error) {
+                showResult('delete-result', false, error.response?.data || error.message);
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const nik = document.getElementById('nikInput').value;
+                const password = document.getElementById('pwInput').value;
+                const response = await axios.post('/api/login', { nik, password });
+                showResult('login-result', true, response.data);
+            } catch (error) {
+                showResult('login-result', false, error.response?.data || error.message);
+            }
+        }
+
+        // Show helpful message on page load
+        window.addEventListener('load', () => {
+            console.log('API Test Page Ready!');
+            console.log('Axios Instance:', window.axios);
+            console.log('Try testing the endpoints above');
+        });
+    </script>
+</body>
+</html>

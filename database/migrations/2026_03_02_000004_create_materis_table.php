@@ -23,6 +23,7 @@ return new class extends Migration
         Schema::create('materis', function (Blueprint $table) {
             $table->bigIncrements('materi_id');
             $table->string('judul');
+            $table->string('image_path')->nullable();
             $table->date('tanggal_upload');
             $table->date('tanggal_selesai');
             $table->integer('jam_pelajaran');

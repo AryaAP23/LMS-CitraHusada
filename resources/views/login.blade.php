@@ -26,14 +26,10 @@
         </div>
 
         {{-- error message --}}
-        @if($errors->any())
-            <div class="mb-4 text-red-600">
-                {{ $errors->first() }}
-            </div>
-        @endif
+        <div id="errorContainer" class="mb-4 text-red-600 hidden"></div>
 
         {{-- Form --}}
-        <form action="{{ route('login.post') }}" method="POST" class="space-y-5">
+        <form id="loginForm" class="space-y-5" onsubmit="handleLogin(event)">
             @csrf
 
             {{-- Nomor Induk --}}
@@ -48,6 +44,7 @@
                     {{-- Input --}}
                     <input 
                         type="text"
+                        id="nikInput"
                         name="nik"
                         placeholder="1234.12345"
                         class="w-full pl-10 pr-4 py-3 
@@ -72,6 +69,7 @@
                     {{-- Input --}}
                     <input 
                         type="password"
+                        id="passwordInput"
                         name="password"
                         placeholder="kata sandi"
                         class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -82,13 +80,14 @@
 
             {{-- Remember me --}}
             <div class="flex items-center gap-2">
-                <input type="checkbox" name="remember" class="w-4 h-4 text-blue-600 rounded">
+                <input type="checkbox" id="rememberInput" name="remember" class="w-4 h-4 text-blue-600 rounded">
                 <label class="text-sm text-gray-600">Ingat saya</label>
             </div>
 
             {{-- Button submit --}}
             <button 
                 type="submit"
+                id="loginBtn"
                 class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition duration-300"
             >
                 Masuk →
@@ -99,5 +98,111 @@
     </div>
 
 </div>
+
+<script>
+async function handleLogin(event) {
+    event.preventDefault();
+    console.log('handleLogin called');
+
+    const nik = document.getElementById('nikInput').value;
+    const password = document.getElementById('passwordInput').value;
+    const loginBtn = document.getElementById('loginBtn');
+    const errorContainer = document.getElementById('errorContainer');
+
+    console.log('Input values:', { nik, password });
+
+    // Disable button dan show loading
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Memproses...';
+
+    try {
+        console.log('Step 1: Checking if axios is available...', typeof window.axios !== 'undefined');
+        if (typeof window.axios === 'undefined') {
+            throw new Error('Axios not available! Check if app.js is loaded.');
+        }
+        
+        console.log('Step 2: Sending login request...');
+        const response = await window.axios.post('/api/login', {
+            nik: nik,
+            password: password,
+            remember: document.getElementById('rememberInput').checked
+        });
+        
+        console.log('Step 3: Login response received:', response.data);
+
+        if (response.data.success) {
+            // Login berhasil, wait a moment untuk session di-set
+            console.log('Step 4: Login successful, waiting 500ms...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Verify session dengan check-auth endpoint
+            console.log('Step 5: Checking auth status...');
+            const authCheck = await window.axios.get('/api/check-auth');
+            console.log('Step 6: Auth check response:', authCheck.data);
+            
+            if (authCheck.data.success) {
+                // Session verified, redirect ke dashboard
+                console.log('Step 7: Auth verified, redirecting to:', response.data.data.redirect);
+                errorContainer.classList.add('hidden');
+                
+                // Ensure redirect URL exists
+                if (!response.data.data.redirect) {
+                    throw new Error('No redirect URL in response!');
+                }
+                
+                window.location.href = response.data.data.redirect;
+            } else {
+                // Session tidak ter-set, tampilkan error
+                console.log('Step 6b: Auth check failed');
+                errorContainer.textContent = 'Session tidak ter-set. Silakan coba lagi. [' + authCheck.data.message + ']';
+                errorContainer.classList.remove('hidden');
+            }
+        } else {
+            // Login gagal
+            console.log('Step 3b: Login failed:', response.data.message);
+            errorContainer.textContent = response.data.message;
+            errorContainer.classList.remove('hidden');
+        }
+    } catch (error) {
+        // Handle error
+        console.error('Error during login:', error);
+        console.error('Error details:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            config: error.config?.data
+        });
+        
+        let errorMsg = 'Terjadi kesalahan saat login';
+        
+        if (error.response && error.response.data) {
+            errorMsg = error.response.data.message;
+            if (error.response.data.data) {
+                // Handle validation errors
+                const errors = error.response.data.data;
+                for (const [field, messages] of Object.entries(errors)) {
+                    errorMsg += '\n' + messages.join('\n');
+                }
+            }
+        } else if (error.message) {
+            errorMsg = error.message;
+        }
+        
+        errorContainer.textContent = errorMsg;
+        errorContainer.classList.remove('hidden');
+        alert('🚨 ' + errorMsg); // Also show alert to make sure user sees the error
+    } finally {
+        // Re-enable button
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Masuk →';
+    }
+}
+
+// Log when page loads to verify JS is working
+console.log('Login page loaded, checking for required elements...');
+console.log('Form element:', document.getElementById('loginForm'));
+console.log('Button element:', document.getElementById('loginBtn'));
+console.log('Error container:', document.getElementById('errorContainer'));
+</script>
 
 @endsection

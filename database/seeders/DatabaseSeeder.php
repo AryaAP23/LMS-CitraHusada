@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Role;
+// use App\Models\Role;
 // use App\Models\JenisTenaga;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -16,18 +16,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seed basic roles
-        Role::firstOrCreate(['role_id' => 1], ['role' => 'Super admin']);
-        Role::firstOrCreate(['role_id' => 2], ['role' => 'Admin']);
+        // Seed roles
+        $this->call(RoleSeeder::class);
 
         // Call seeder untuk jenis tenaga
         $this->call(JenisTenagaSeeder::class);
 
         // Call seeder untuk unit kerja
         $this->call(UnitKerjaSeeder::class);
-
-        // optional texts shown on login page
-        $this->call(LoginTextSeeder::class);
 
         // create default admin user
         $this->call(UserSeeder::class);

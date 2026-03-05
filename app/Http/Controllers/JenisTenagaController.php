@@ -13,7 +13,20 @@ class JenisTenagaController extends Controller
     public function index()
     {
         // return all jenis tenaga entries
-        return JenisTenaga::all();
+        try {
+            $data = JenisTenaga::all();
+            return response()->json([
+                'success' => true,
+                'message' => 'Data jenis tenaga berhasil diambil',
+                'data' => $data
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data jenis tenaga',
+                'data' => null
+            ], 500);
+        }
     }
 
     /**
@@ -21,13 +34,31 @@ class JenisTenagaController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'jenis_tenaga' => 'required|string|max:255',
-        ]);
+        try {
+            $validated = $request->validate([
+                'jenis_tenaga' => 'required|string|max:255',
+            ]);
 
-        $jenisTenaga = JenisTenaga::create($validated);
+            $jenisTenaga = JenisTenaga::create($validated);
 
-        return response()->json($jenisTenaga, 201);
+            return response()->json([
+                'success' => true,
+                'message' => 'Jenis tenaga berhasil dibuat',
+                'data' => $jenisTenaga
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'data' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat jenis tenaga',
+                'data' => null
+            ], 500);
+        }
     }
 
     /**
@@ -35,7 +66,19 @@ class JenisTenagaController extends Controller
      */
     public function show(JenisTenaga $jenisTenaga)
     {
-        return $jenisTenaga;
+        try {
+            return response()->json([
+                'success' => true,
+                'message' => 'Detail jenis tenaga berhasil diambil',
+                'data' => $jenisTenaga
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil detail jenis tenaga',
+                'data' => null
+            ], 500);
+        }
     }
 
     /**
@@ -43,13 +86,31 @@ class JenisTenagaController extends Controller
      */
     public function update(Request $request, JenisTenaga $jenisTenaga)
     {
-        $validated = $request->validate([
-            'jenis_tenaga' => 'required|string|max:255',
-        ]);
+        try {
+            $validated = $request->validate([
+                'jenis_tenaga' => 'required|string|max:255',
+            ]);
 
-        $jenisTenaga->update($validated);
+            $jenisTenaga->update($validated);
 
-        return response()->json($jenisTenaga);
+            return response()->json([
+                'success' => true,
+                'message' => 'Jenis tenaga berhasil diperbarui',
+                'data' => $jenisTenaga
+            ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'data' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui jenis tenaga',
+                'data' => null
+            ], 500);
+        }
     }
 
     /**
@@ -57,8 +118,20 @@ class JenisTenagaController extends Controller
      */
     public function destroy(JenisTenaga $jenisTenaga)
     {
-        $jenisTenaga->delete();
+        try {
+            $jenisTenaga->delete();
 
-        return response()->noContent();
+            return response()->json([
+                'success' => true,
+                'message' => 'Jenis tenaga berhasil dihapus',
+                'data' => null
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus jenis tenaga',
+                'data' => null
+            ], 500);
+        }
     }
 }
