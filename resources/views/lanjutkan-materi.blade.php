@@ -243,6 +243,20 @@
             });
         }
 
+        function formatDurasi(detik) {
+            let jam = Math.floor(detik / 3600);
+            let sisaSetelahJam = detik % 3600;
+            let menit = Math.floor(sisaSetelahJam / 60);
+            let sisaDetik = sisaSetelahJam % 60;
+            
+            let hasil = [];
+            if (jam > 0) hasil.push(`${jam} Jam`);
+            if (menit > 0) hasil.push(`${menit} Menit`);
+            if (sisaDetik > 0 || hasil.length === 0) hasil.push(`${sisaDetik} Detik`);
+            
+            return hasil.join(' ');
+        }
+
         function loadMateri(step) {
             currentStep = step;
 
@@ -321,7 +335,7 @@
                             </span>
 
                             <span class="bg-blue-100 dark:bg-blue-900/30 px-4 py-2 rounded-lg">
-                                ${step.waktu_pengerjaan} Detik
+                                ${formatDurasi(step.waktu_pengerjaan)}
                             </span>
 
                             <span class="bg-blue-100 dark:bg-blue-900/30 px-4 py-2 rounded-lg">
