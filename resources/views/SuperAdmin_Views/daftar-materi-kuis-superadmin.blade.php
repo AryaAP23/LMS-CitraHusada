@@ -54,6 +54,73 @@
                     </div>
                 </div>
 
+                {{-- Statistik Penyelesaian --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" x-show="!isLoading && statistics.total_users > 0" x-transition>
+                    {{-- Card Grafik Lingkaran --}}
+                    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 p-6 transition-colors">
+                        <div class="flex items-center gap-2 mb-5">
+                            <div class="w-8 h-8 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-chart-pie text-blue-500 text-sm"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-gray-800 dark:text-white">Persentase Penyelesaian</h3>
+                        </div>
+                        <div class="flex items-center justify-center gap-8">
+                            <div class="relative w-40 h-40">
+                                <canvas id="completionChart"></canvas>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-2xl font-extrabold text-gray-800 dark:text-white" x-text="statistics.persentase_selesai + '%'"></span>
+                                    <span class="text-[10px] text-gray-400 font-medium">Selesai</span>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-3 h-3 rounded-full bg-emerald-500 shrink-0"></span>
+                                    <div>
+                                        <p class="text-xs font-bold text-gray-700 dark:text-white">Selesai</p>
+                                        <p class="text-lg font-extrabold text-emerald-600 dark:text-emerald-400" x-text="statistics.selesai"></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="w-3 h-3 rounded-full bg-gray-300 dark:bg-slate-600 shrink-0"></span>
+                                    <div>
+                                        <p class="text-xs font-bold text-gray-700 dark:text-white">Belum Selesai</p>
+                                        <p class="text-lg font-extrabold text-gray-500 dark:text-gray-400" x-text="statistics.belum_selesai"></p>
+                                    </div>
+                                </div>
+                                <div class="pt-2 border-t dark:border-slate-700">
+                                    <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Peserta</p>
+                                    <p class="text-sm font-bold text-gray-600 dark:text-gray-300" x-text="statistics.total_users + ' user'"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Card Nilai Rata-rata --}}
+                    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 p-6 transition-colors">
+                        <div class="flex items-center gap-2 mb-5">
+                            <div class="w-8 h-8 bg-amber-50 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-ranking-star text-amber-500 text-sm"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-gray-800 dark:text-white">Nilai Rata-rata</h3>
+                        </div>
+                        <div class="flex flex-col items-center justify-center h-[calc(100%-3rem)]">
+                            <div class="relative mb-3">
+                                <span class="text-6xl font-extrabold bg-clip-text text-transparent"
+                                    :class="statistics.nilai_rata_rata >= 75 ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : (statistics.nilai_rata_rata >= 50 ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-gradient-to-r from-red-500 to-rose-500')"
+                                    x-text="statistics.nilai_rata_rata"></span>
+                            </div>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mb-4"
+                                x-text="'dari ' + statistics.selesai + ' user yang sudah menyelesaikan'"></p>
+                            <div class="px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-wider"
+                                :class="statistics.nilai_rata_rata >= 75 ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : (statistics.nilai_rata_rata >= 50 ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400')">
+                                <i class="fa-solid mr-1"
+                                    :class="statistics.nilai_rata_rata >= 75 ? 'fa-circle-check' : (statistics.nilai_rata_rata >= 50 ? 'fa-triangle-exclamation' : 'fa-circle-xmark')"></i>
+                                <span x-text="statistics.nilai_rata_rata >= 75 ? 'Sangat Baik' : (statistics.nilai_rata_rata >= 50 ? 'Cukup Baik' : 'Perlu Ditingkatkan')"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Combined Table --}}
                 <div
                     class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden mb-10 transition-colors">
@@ -597,6 +664,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         function daftarMateriKuisData(materiId, readOnly = false) {
             return {
@@ -608,6 +676,8 @@
                 isSubmitting: false,
                 materiInfo: {},
                 contents: [],
+                statistics: { total_users: 0, selesai: 0, belum_selesai: 0, persentase_selesai: 0, nilai_rata_rata: 0 },
+                completionChartInstance: null,
 
                 openTambahMateri: false,
                 openTambahKuis: false,
@@ -646,9 +716,56 @@
                         if (res.success) {
                             this.materiInfo = res.data.materi;
                             this.contents = res.data.contents;
+                            this.statistics = res.data.statistics || this.statistics;
+                            this.$nextTick(() => this.renderChart());
                         }
                     } catch (e) { console.error(e); }
                     this.isLoading = false;
+                },
+
+                renderChart() {
+                    const canvas = document.getElementById('completionChart');
+                    if (!canvas) return;
+
+                    if (this.completionChartInstance) {
+                        this.completionChartInstance.destroy();
+                    }
+
+                    const ctx = canvas.getContext('2d');
+                    this.completionChartInstance = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Selesai', 'Belum Selesai'],
+                            datasets: [{
+                                data: [this.statistics.selesai, this.statistics.belum_selesai],
+                                backgroundColor: ['#10b981', '#e2e8f0'],
+                                borderWidth: 0,
+                                hoverOffset: 6
+                            }]
+                        },
+                        options: {
+                            cutout: '72%',
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    backgroundColor: this.darkMode ? '#1e293b' : '#fff',
+                                    titleColor: this.darkMode ? '#f1f5f9' : '#1e293b',
+                                    bodyColor: this.darkMode ? '#94a3b8' : '#64748b',
+                                    borderColor: this.darkMode ? '#334155' : '#e2e8f0',
+                                    borderWidth: 1,
+                                    cornerRadius: 8,
+                                    padding: 12,
+                                    displayColors: true,
+                                    boxPadding: 6,
+                                    callbacks: {
+                                        label: (ctx) => ` ${ctx.label}: ${ctx.raw} user`
+                                    }
+                                }
+                            }
+                        }
+                    });
                 },
 
                 // Sub Materi Methods

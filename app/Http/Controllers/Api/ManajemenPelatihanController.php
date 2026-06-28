@@ -376,11 +376,31 @@ class ManajemenPelatihanController extends Controller
                 ->count();
         }
 
+        // Hitung statistik penyelesaian dari user_progress
+        $totalUsers = UserProgress::where('materi_id', $materiId)->count();
+        $selesaiCount = UserProgress::where('materi_id', $materiId)
+            ->where('status', 'Selesai')
+            ->count();
+        $belumSelesaiCount = $totalUsers - $selesaiCount;
+        $persentaseSelesai = $totalUsers > 0 ? round(($selesaiCount / $totalUsers) * 100, 1) : 0;
+
+        $nilaiRataRata = UserProgress::where('materi_id', $materiId)
+            ->where('status', 'Selesai')
+            ->avg('skor_total') ?? 0;
+        $nilaiRataRata = round($nilaiRataRata, 1);
+
         return response()->json([
             'success' => true,
             'data' => [
                 'materi' => $materi,
-                'contents' => $contents
+                'contents' => $contents,
+                'statistics' => [
+                    'total_users' => $totalUsers,
+                    'selesai' => $selesaiCount,
+                    'belum_selesai' => $belumSelesaiCount,
+                    'persentase_selesai' => $persentaseSelesai,
+                    'nilai_rata_rata' => $nilaiRataRata,
+                ]
             ]
         ]);
     }
