@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -18,7 +19,7 @@ class AuthController extends Controller
     {
         if (Auth::check()) {
             $user = Auth::user();
-            // $redirectUrl = ($user->role_id == 1) ? '/beranda-superadmin' : (($user->role_id == 2) ? '/beranda-admin' : '/pembelajaran');
+            // $redirectUrl = ($user->hasRole('super_admin')) ? '/beranda-superadmin' : (($user->hasRole('admin')) ? '/beranda-admin' : '/pembelajaran');
             $redirectUrl = '/pembelajaran';
             return redirect($redirectUrl);
         }
@@ -31,7 +32,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'nik' => 'required|string',
+            'nip' => 'required|string',
             'password' => 'required|string',
         ]);
 
@@ -40,7 +41,7 @@ class AuthController extends Controller
             return redirect()->intended('/pembelajaran');
         }
 
-        return back()->withErrors(["nik" => "Nomor induk atau kata sandi tidak cocok."]);
+        return back()->withErrors(["nip" => "Nomor induk atau kata sandi tidak cocok."]);
     }
 
     /**
@@ -50,18 +51,18 @@ class AuthController extends Controller
     {
         try {
             $credentials = $request->validate([
-                'nik' => 'required|string',
+                'nip' => 'required|string',
                 'password' => 'required|string',
             ]);
 
             $remember = $request->boolean('remember'); // 🔥 ini pengganti remember_token
 
-            $user = \App\Models\User::where('nik', $credentials['nik'])->first();
+            $user = \App\Models\User::where('nip', $credentials['nip'])->first();
 
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User dengan NIK tersebut tidak ditemukan',
+                    'message' => 'User dengan NIP tersebut tidak ditemukan',
                     'data' => null
                 ], 401);
             }
@@ -69,7 +70,7 @@ class AuthController extends Controller
             if (!\Illuminate\Support\Facades\Hash::check($credentials['password'], $user->password)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Password salah untuk user dengan NIK ini',
+                    'message' => 'Password salah untuk user dengan NIP ini',
                     'data' => null
                 ], 401);
             }
@@ -85,7 +86,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             // Mengatur redirect berdasarkan role! Mencegah user Karyawan dilempar ke Admin dan 403 Forbidden
-            $redirectUrl = ($user->role_id == 1) ? '/beranda-superadmin' : '/pembelajaran';
+            $redirectUrl = ($user->hasRole('super_admin')) ? '/beranda-superadmin' : '/pembelajaran';
 
             // Mengatur expiry logic manual (simulasi "remember me")
             $expires_at = $remember
@@ -123,25 +124,149 @@ class AuthController extends Controller
      */
     public function logoutApi(Request $request)
     {
-        try {
-            // Bersihkan token Sanctum
-            $request->user()->currentAccessToken()->delete();
+        $traceId = (string) Str::uuid();
 
-            // Bersihkan Session Web agar tidak ada bocoran state
-            Auth::guard('web')->logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+        try {
+            $user = $request->user();
+            $reason = $request->input('reason', 'User initiated logout via API');
+
+            $oldSessionId = $request->hasSession()
+                ? $request->session()->getId()
+                : null;
+
+            Log::info('Local API Logout Started', [
+                'trace_id' => $traceId,
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+
+                'user_id' => $user?->id,
+                'web_user_id' => Auth::guard('web')->id(),
+
+                'has_session' => $request->hasSession(),
+                'session_id' => $oldSessionId,
+
+                'has_bearer_token' => filled($request->bearerToken()),
+                'reason' => $reason,
+            ]);
+
+            /**
+             * Jangan langsung:
+             * $request->user()->currentAccessToken()->delete();
+             *
+             * Karena currentAccessToken() bisa null kalau user login via session/web SSO.
+             */
+            $tokenDeleted = false;
+            $tokenId = null;
+
+            if ($user && method_exists($user, 'currentAccessToken')) {
+                $currentAccessToken = $user->currentAccessToken();
+
+                if ($currentAccessToken) {
+                    $tokenId = $currentAccessToken->id ?? null;
+
+                    if (method_exists($currentAccessToken, 'delete')) {
+                        $currentAccessToken->delete();
+                        $tokenDeleted = true;
+                    }
+                }
+            }
+
+            Log::info('Local API Logout Token Check Completed', [
+                'trace_id' => $traceId,
+                'user_id' => $user?->id,
+                'has_current_access_token' => $tokenId !== null,
+                'token_id' => $tokenId,
+                'token_deleted' => $tokenDeleted,
+                'note' => $tokenDeleted
+                    ? 'Sanctum token deleted'
+                    : 'No Sanctum token deleted, probably session/web SSO logout',
+            ]);
+
+            /**
+             * PENTING:
+             * Jika IAM aktif, kita JANGAN logout session web di sini!
+             * Biarkan session web tetap hidup agar saat frontend melakukan form submit POST /logout (Web),
+             * request tersebut tidak dicegat oleh middleware auth yang menyebabkan redirect ke halaman SSO Login (auto-login loop).
+             */
+            if (!config('iam.enabled')) {
+                Auth::guard('web')->logout();
+
+                Log::info('Local API Logout Web Guard Completed', [
+                    'trace_id' => $traceId,
+                    'previous_user_id' => $user?->id,
+                    'old_session_id' => $oldSessionId,
+                ]);
+
+                if ($request->hasSession()) {
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+
+                    Log::info('Local API Logout Session Invalidated', [
+                        'trace_id' => $traceId,
+                        'old_session_id' => $oldSessionId,
+                        'new_session_id' => $request->session()->getId(),
+                    ]);
+                } else {
+                    Log::warning('Local API Logout No Session Found', [
+                        'trace_id' => $traceId,
+                        'user_id' => $user?->id,
+                    ]);
+                }
+            } else {
+                Log::info('Local API Logout Skipping Web Session Invalidation', [
+                    'trace_id' => $traceId,
+                    'reason' => 'IAM is enabled, waiting for web logout redirect to SSO.'
+                ]);
+            }
+
+            Log::info('Local API Logout Completed', [
+                'trace_id' => $traceId,
+                'previous_user_id' => $user?->id,
+                'token_deleted' => $tokenDeleted,
+                'old_session_id' => $oldSessionId,
+                'new_session_id' => $request->hasSession()
+                    ? $request->session()->getId()
+                    : null,
+            ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Logout berhasil',
-                'data' => null
+                'data' => [
+                    'trace_id' => $traceId,
+                ],
             ], 200);
-        } catch (\Exception $e) {
+
+        } catch (\Throwable $e) {
+            Log::error('Local API Logout Failed', [
+                'trace_id' => $traceId,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'ip' => $request->ip(),
+
+                'user_id' => $request->user()?->id,
+                'web_user_id' => Auth::guard('web')->id(),
+
+                'has_session' => $request->hasSession(),
+                'session_id' => $request->hasSession()
+                    ? $request->session()->getId()
+                    : null,
+
+                'has_bearer_token' => filled($request->bearerToken()),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal melakukan logout',
-                'data' => null
+                'data' => [
+                    'trace_id' => $traceId,
+                ],
             ], 500);
         }
     }
@@ -150,6 +275,12 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        $reason = $request->input('reason', 'User initiated logout via Web');
+        \Illuminate\Support\Facades\Log::info('Local Web Logout Initiated', [
+            'user_id' => Auth::id(),
+            'session_id' => $request->session()->getId(),
+            'reason' => $reason,
+        ]);
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

@@ -67,7 +67,7 @@
                         </span>
                         <input type="text" x-model="filters.search" @keydown.enter.prevent="fetchData(1)" id="searchUser"
                             class="block w-full pl-9 pr-3 py-2.5 border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-xs text-gray-700 dark:text-white transition-all placeholder:dark:text-gray-400"
-                            placeholder="Cari nama atau NIK...">
+                            placeholder="Cari nama atau NIP...">
                     </div>
                 </form>
 
@@ -79,7 +79,7 @@
                             class="text-gray-500 dark:text-white font-bold border-b dark:border-slate-800 bg-gray-50/50 dark:bg-slate-800/50">
                             <tr>
                                 <th class="py-4 px-6 uppercase tracking-wider">Nama Lengkap</th>
-                                <th class="py-4 px-4 uppercase tracking-wider">NIK</th>
+                                <th class="py-4 px-4 uppercase tracking-wider">NIP</th>
                                 <th class="py-4 px-4 uppercase tracking-wider">Jenis Tenaga</th>
                                 <th class="py-4 px-4 uppercase tracking-wider">Unit Kerja</th>
                                 <th class="py-4 px-4 uppercase tracking-wider">JPL</th>
@@ -106,49 +106,77 @@
                             <template x-if="!isLoading && users.length > 0">
                                 <template x-for="user in users" :key="user.user_id">
                                     <tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition">
+                                        <!-- Nama -->
                                         <td class="py-5 px-6 font-bold text-gray-800 dark:text-white"
-                                            x-text="user.nama || '-'"></td>
-                                        <td class="py-5 px-4 text-gray-500 dark:text-gray-300" x-text="user.nik || '-'">
+                                            x-text="user.name || '-'">
                                         </td>
+
+                                        <!-- NIP -->
+                                        <td class="py-5 px-4 text-gray-500 dark:text-gray-300" x-text="user.nip || '-'">
+                                        </td>
+
+                                        <!-- Jenis Tenaga -->
                                         <td class="py-5 px-4">
                                             <span
                                                 class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-gray-200 px-3 py-1 rounded-md font-semibold transition-colors"
-                                                x-text="user.jenis_tenaga ? user.jenis_tenaga.jenis_tenaga : '-'"></span>
+                                                x-text="user.jenis_tenaga 
+                        ? (user.jenis_tenaga.jenis_tenaga || user.jenis_tenaga.name || user.jenis_tenaga.nama || '-') 
+                        : '-'">
+                                            </span>
                                         </td>
+
+                                        <!-- Unit Kerja -->
                                         <td class="py-5 px-4 whitespace-nowrap">
                                             <span
                                                 class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-gray-200 px-3 py-1 rounded-md font-semibold"
-                                                x-text="user.unit_kerja ? user.unit_kerja.unit_kerja : '-'"></span>
+                                                x-text="(user.unit_kerjas && user.unit_kerjas.length > 0) 
+                        ? user.unit_kerjas.map(unit => unit.unit_name).join(', ') 
+                        : '-'">
+                                            </span>
                                         </td>
-                                        <td class="py-5 px-4 text-gray-500 dark:text-gray-300" x-text="(parseInt(user.total_jpl) || 0) + (parseInt(user.jpl_eksternal) || 0)">
+
+                                        <!-- Total JPL -->
+                                        <td class="py-5 px-4 text-gray-500 dark:text-gray-300"
+                                            x-text="(parseInt(user.total_jpl) || 0) + (parseInt(user.jpl_eksternal) || 0)">
                                         </td>
+
+                                        <!-- Status -->
                                         <td class="py-5 px-4 text-center">
                                             <span
                                                 class="px-3 py-1 rounded font-bold text-[10px] uppercase transition-colors"
                                                 :class="{
-                                                                'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400': user.status === 'active' || user.status === 'Aktif',
-                                                                'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400': user.status === 'inactive' || user.status === 'Tidak Aktif',
-                                                                'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400': user.status === 'suspended',
-                                                                'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300': user.status !== 'active' && user.status !== 'inactive' && user.status !== 'suspended' && user.status !== 'Aktif' && user.status !== 'Tidak Aktif'
-                                                            }" x-text="user.status === 'active' || user.status === 'Aktif' ? 'Aktif' : (user.status === 'inactive' || user.status === 'Tidak Aktif' ? 'Tidak Aktif' : (user.status === 'suspended' ? 'Suspended' : user.status))"></span>
+                        'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400': ['active', 'aktif'].includes((user.status || '').toLowerCase()),
+                        'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400': ['inactive', 'tidak aktif'].includes((user.status || '').toLowerCase()),
+                        'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400': (user.status || '').toLowerCase() === 'suspended',
+                        'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300': !['active', 'aktif', 'inactive', 'tidak aktif', 'suspended'].includes((user.status || '').toLowerCase())
+                    }" x-text="
+                        ['active', 'aktif'].includes((user.status || '').toLowerCase())
+                            ? 'Aktif'
+                            : ['inactive', 'tidak aktif'].includes((user.status || '').toLowerCase())
+                                ? 'Tidak Aktif'
+                                : (user.status || '-')
+                    ">
+                                            </span>
                                         </td>
+
+                                        <!-- Actions -->
                                         <td class="py-5 px-6 text-right">
                                             <div class="flex justify-end gap-3">
-                                                {{-- Impersonate --}}
+                                                <!-- Impersonate -->
                                                 <a :href="`/manajemen-pengguna/impersonate/${user.user_id}`"
                                                     class="p-1.5 hover:bg-amber-50 dark:hover:bg-amber-900/20 text-gray-500 rounded-lg transition-all active:scale-90"
                                                     title="Masuk sebagai user ini">
                                                     <i class="fa-solid fa-eye text-sm"></i>
                                                 </a>
 
-                                                {{-- Edit --}}
-                                                <button @click="openEditModal(user)"
+                                                <!-- Edit -->
+                                                <button type="button" @click="openEditModal(user)"
                                                     class="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-500 rounded-lg transition-all active:scale-90"
                                                     title="Edit data">
                                                     <i class="fa-solid fa-pen text-sm"></i>
                                                 </button>
 
-                                                {{-- Delete --}}
+                                                <!-- Delete -->
                                                 <button type="button" @click="deleteUser(user)"
                                                     class="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-500 rounded-lg transition-all active:scale-90"
                                                     title="Hapus user">
@@ -176,10 +204,10 @@
                                     <button
                                         @click.prevent="if(link.url) fetchData(new URL(link.url).searchParams.get('page'))"
                                         x-html="link.label" :disabled="!link.url || link.active" :class="[
-                                                        'px-3 py-1.5 text-[10px] sm:text-xs font-medium rounded-md transition-colors',
-                                                        link.active ? 'bg-blue-600 text-white shadow-md' : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700',
-                                                        !link.url ? 'opacity-50 cursor-not-allowed' : ''
-                                                    ]"></button>
+                                                                'px-3 py-1.5 text-[10px] sm:text-xs font-medium rounded-md transition-colors',
+                                                                link.active ? 'bg-blue-600 text-white shadow-md' : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700',
+                                                                !link.url ? 'opacity-50 cursor-not-allowed' : ''
+                                                            ]"></button>
                                 </template>
                             </div>
                         </div>
@@ -203,7 +231,7 @@
                     <div>
                         <h4 class="text-sm font-bold text-gray-800 dark:text-white">Tips Admin</h4>
                         <p class="text-xs text-gray-500 dark:text-gray-300 mt-1 leading-relaxed">Gunakan fitur pencarian
-                            untuk mempercepat pelacakan data NIK staf secara instan.</p>
+                            untuk mempercepat pelacakan data NIP staf secara instan.</p>
                     </div>
                 </div>
             </main>
@@ -243,8 +271,8 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label class="block text-xs font-bold text-gray-600 dark:text-white mb-2">Nomor
-                                            Induk Karyawan (NIK)</label>
-                                        <input type="text" x-model="editForm.nik" required
+                                            Induk Karyawan (NIP)</label>
+                                        <input type="text" x-model="editForm.nip" required
                                             class="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg h-12 px-4 focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm dark:text-white">
                                     </div>
                                     <div>
@@ -269,7 +297,7 @@
                                     <select x-model="editForm.unit_kerja_id" required
                                         class="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg h-12 px-4 text-sm dark:text-white outline-none">
                                         @foreach($unit_kerjas as $uk)
-                                            <option value="{{ $uk->unit_kerja_id }}">{{ $uk->unit_kerja }}</option>
+                                            <option value="{{ $uk->unit_kerja_id }}">{{ $uk->unit_name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -286,7 +314,7 @@
                                 <div>
                                     <label
                                         class="block text-xs font-bold text-gray-600 dark:text-white mb-2">Role/Peran</label>
-                                    <select x-model="editForm.role_id" required
+                                    <select x-model="editForm.roles" required
                                         class="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg h-12 px-4 text-sm dark:text-white outline-none">
                                         @foreach($roles as $role)
                                             <option value="{{ $role->role_id }}">{{ $role->role }}</option>
@@ -304,23 +332,21 @@
                                     class="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg h-12 px-4 focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm dark:text-white">
                             </div>
 
-                            <div class="flex items-center justify-between bg-gray-50 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700">
+                            <div
+                                class="flex items-center justify-between bg-gray-50 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700">
                                 <span class="text-xs font-bold text-gray-700 dark:text-white">Status Pengguna</span>
                                 <div class="flex space-x-2">
-                                    <button type="button" 
-                                        @click="editForm.status = 'active'"
+                                    <button type="button" @click="editForm.status = 'active'"
                                         :class="editForm.status === 'active' || editForm.status === 'Aktif' ? 'bg-emerald-600 text-white' : 'bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300'"
                                         class="py-1.5 px-3 text-xs font-bold rounded-lg transition-colors">
                                         Active
                                     </button>
-                                    <button type="button" 
-                                        @click="editForm.status = 'inactive'"
+                                    <button type="button" @click="editForm.status = 'inactive'"
                                         :class="editForm.status === 'inactive' || editForm.status === 'Tidak Aktif' ? 'bg-rose-600 text-white' : 'bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300'"
                                         class="py-1.5 px-3 text-xs font-bold rounded-lg transition-colors">
                                         Inactive
                                     </button>
-                                    <button type="button" 
-                                        @click="editForm.status = 'suspended'"
+                                    <button type="button" @click="editForm.status = 'suspended'"
                                         :class="editForm.status === 'suspended' ? 'bg-amber-600 text-white' : 'bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300'"
                                         class="py-1.5 px-3 text-xs font-bold rounded-lg transition-colors">
                                         Suspended
@@ -385,7 +411,7 @@
                 editForm: {
                     user_id: null,
                     nama: '',
-                    nik: '',
+                    nip: '',
                     total_jpl: 0,
                     unit_kerja_id: '',
                     jenis_tenaga_id: '',
@@ -435,12 +461,12 @@
                 openEditModal(user) {
                     this.editForm = {
                         user_id: user.user_id,
-                        nama: user.nama,
-                        nik: user.nik,
+                        nama: user.name,
+                        nip: user.nip,
                         total_jpl: (parseInt(user.total_jpl) || 0) + (parseInt(user.jpl_eksternal) || 0),
-                        unit_kerja_id: user.unit_kerja_id,
+                        unit_kerja_id: user.unit_kerjas && user.unit_kerjas.length > 0 ? user.unit_kerjas[0].unit_kerja_id : '',
                         jenis_tenaga_id: user.jenis_tenaga_id,
-                        role_id: user.role_id,
+                        roles: user.roles && user.roles.length ? user.roles[0] : '',
                         status: user.status,
                         password: '' // Reset password input
                     };
@@ -451,6 +477,10 @@
                     this.isSubmitting = true;
                     try {
                         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                        // Ensure roles is an array
+                        if (typeof this.editForm.roles === 'string') {
+                            this.editForm.roles = [this.editForm.roles];
+                        }
                         const response = await fetch(`/api/admin/manajemen-pengguna/update/${this.editForm.user_id}`, {
                             method: 'PUT',
                             headers: {
@@ -492,7 +522,7 @@
                 async deleteUser(user) {
                     const result = await Swal.fire({
                         title: 'Apakah Anda yakin?',
-                        text: `Data pengguna ${user.nama} yang dihapus tidak dapat dikembalikan!`,
+                        text: `Data pengguna ${user.name} yang dihapus tidak dapat dikembalikan!`,
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonColor: '#ef4444',

@@ -86,7 +86,7 @@ class LeaderboardController extends Controller
         $statusFilter = $request->query('status');
         $search = $request->query('search');
         
-        $query = User::with('unitKerja')
+        $query = User::with('unitKerjas')
             ->withCount([
                 'progresses as pelatihan_selesai' => function ($query) {
                     $query->where('status', 'Selesai');
@@ -105,8 +105,8 @@ class LeaderboardController extends Controller
 
         // Filter Search
         if ($search) {
-            $query->where('nama', 'LIKE', "%{$search}%")
-                  ->orWhere('nik', 'LIKE', "%{$search}%");
+            $query->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('nip', 'LIKE', "%{$search}%");
         }
 
         // Filter Status JPL

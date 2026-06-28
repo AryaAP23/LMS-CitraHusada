@@ -31,11 +31,13 @@ use App\Http\Controllers\Api\RestoreController;
 |
 */
 
-// Public API routes
-Route::post('/login', [AuthController::class, 'loginApi']);
-
-// Public API routes
-Route::post('/login', [AuthController::class, 'loginApi']);
+if (!config('iam.enabled')) {
+    Route::any('/login', function () {
+        abort(403, 'Aplikasi tidak dapat diakses, IAM sedang tidak aktif.');
+    });
+} else {
+    Route::post('/login', [AuthController::class, 'loginApi']);
+}
 
 // Debug: Check users for API test page
 Route::get('/debug-users', function () {
@@ -47,7 +49,8 @@ Route::get('/debug-users', function () {
     ]);
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+$apiAuthMiddleware = config('iam.enabled') ? 'iam.auth:api' : 'auth:sanctum';
+Route::middleware($apiAuthMiddleware)->group(function () {
 
     // Global User Endpoint
     Route::post('/logout', [AuthController::class, 'logoutApi']);
@@ -92,7 +95,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ============================================
     // API UNTUK SUPERADMIN (role_id = 1)
     // ============================================
-    Route::middleware(['role:1', 'no.impersonate'])->prefix('admin')->group(function () {
+    Route::middleware(['role:super_admin', 'no.impersonate'])->prefix('admin')->group(function () {
         // Dashboard
         // Route::get('/dashboard/charts', [\App\Http\Controllers\DashboardSuperadminController::class, 'getChartData'])->name('api.dashboard.charts');
         Route::get('/superadmin/dashboard', [DashboardSuperadminController::class, 'index']);
@@ -152,7 +155,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     });
 
-    Route::middleware(['role:1,2', 'no.impersonate'])->prefix('admin')->group(function () {
+    Route::middleware(['role:super_admin,admin', 'no.impersonate'])->prefix('admin')->group(function () {
         Route::get('/laporan-monitoring/data', [LaporanMonitoringController::class, 'getMonitoringData']);
         Route::get('/laporan-monitoring/sertifikat-eksternal', [LaporanMonitoringController::class, 'getSertifikatEksternalData']);
         Route::get('/laporan-monitoring/sertifikat-eksternal/list', [LaporanMonitoringController::class, 'getSertifikatEksternalList']);
@@ -163,7 +166,7 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 
-    Route::middleware(['role:2', 'no.impersonate'])->prefix('admin')->group(function () {
+    Route::middleware(['role:admin', 'no.impersonate'])->prefix('admin')->group(function () {
         // Kelola Tanda Tangan / Sertifikat
         Route::prefix('sertifikat')->group(function () {
             Route::get('/direktur', [SertifikatController::class, 'getDirektur']);
@@ -174,13 +177,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/sertifikat-eksternal/verifikasi/{sertifikatEksternalId}', [LaporanMonitoringController::class, 'verifikasiSertifikatEksternal']);
     });
         
-    Route::middleware(['role:2,3', 'no.impersonate'])->prefix('admin')->group(function () {
+    Route::middleware(['role:admin,teacher', 'no.impersonate'])->prefix('admin')->group(function () {
         Route::get('/dashboard', [DashboardAdminController::class, 'index']);
         Route::get('/dashboard/charts', [DashboardAdminController::class, 'getChartData']);
         Route::get('/karyawan-progress', [DashboardAdminController::class, 'getKaryawanProgress']);
     });
 
-    Route::middleware(['role:1,3', 'no.impersonate'])->prefix('admin')->group(function () {
+    Route::middleware(['role:super_admin,teacher', 'no.impersonate'])->prefix('admin')->group(function () {
         // Manajemen Pelatihan
         Route::prefix('manajemen-pelatihan')->group(function () {
             Route::get('/data', [ManajemenPelatihanController::class, 'getData']);

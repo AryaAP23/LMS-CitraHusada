@@ -7,6 +7,9 @@
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="user-logged-in" content="{{ Auth::check() ? 'true' : 'false' }}">
+    @if(config('iam.enabled') && session()->has('iam.access_token'))
+        <meta name="iam-access-token" content="{{ session('iam.access_token') }}">
+    @endif
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <title>LMS - @yield('title', 'word')</title>
@@ -70,7 +73,7 @@
                 <i class="fa-solid fa-user-secret text-sm"></i>
             </div>
             <p class="text-xs font-bold tracking-wide">
-                MODE IMPERSONASI: Anda sedang masuk sebagai <span class="underline decoration-2 underline-offset-4">{{ Auth::user()->nama }}</span>
+                MODE IMPERSONASI: Anda sedang masuk sebagai <span class="underline decoration-2 underline-offset-4">{{ Auth::user()->name }}</span>
             </p>
         </div>
         <a href="{{ route('impersonate.stop') }}" 

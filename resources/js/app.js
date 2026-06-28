@@ -1,10 +1,18 @@
 import './bootstrap';
 
 function getToken() {
-    return localStorage.getItem('token') || sessionStorage.getItem('token');
+    let token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!token) {
+        const iamMeta = document.querySelector('meta[name="iam-access-token"]');
+        if (iamMeta) {
+            token = iamMeta.getAttribute('content');
+            sessionStorage.setItem('token', token);
+        }
+    }
+    return token;
 }
 
-function performWebLogout() {
+function performWebLogout(reason = 'Unknown reason') {
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');
     
@@ -21,6 +29,12 @@ function performWebLogout() {
         form.appendChild(input);
     }
 
+    const reasonInput = document.createElement('input');
+    reasonInput.type = 'hidden';
+    reasonInput.name = 'reason';
+    reasonInput.value = reason;
+    form.appendChild(reasonInput);
+
     document.body.appendChild(form);
     form.submit();
 }
@@ -35,7 +49,7 @@ if (isLoginPage && !isServerLoggedIn) {
     sessionStorage.removeItem('token');
 } else if (!token && !isLoginPage) {
     if (isServerLoggedIn) {
-        performWebLogout();
+        performWebLogout('Token missing on non-login page');
     } else {
         window.location.href = '/';
     }
@@ -61,7 +75,9 @@ window.axios.interceptors.response.use(
         if (error.response && error.response.status === 401 && !isLoginPage) {
             // Remove token and clear session on server side failure
             if (isServerLoggedIn) {
-                performWebLogout();
+                console.warn('API returned 401 Unauthorized (' + error.config.url + '). Mencegah auto-logout brutal.');
+                // Jangan langsung performWebLogout, biarkan sesi cookie tetap hidup
+                // performWebLogout('API returned 401 Unauthorized (' + error.config.url + ')');
             } else {
                 localStorage.removeItem('token');
                 sessionStorage.removeItem('token');
@@ -119,6 +135,12 @@ window.handleLogout = async function (event) {
                 input.value = csrfToken;
                 form.appendChild(input);
             }
+
+            const reasonInput = document.createElement('input');
+            reasonInput.type = 'hidden';
+            reasonInput.name = 'reason';
+            reasonInput.value = 'User manually clicked logout';
+            form.appendChild(reasonInput);
 
             document.body.appendChild(form);
             form.submit();
