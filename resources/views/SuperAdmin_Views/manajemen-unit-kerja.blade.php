@@ -68,9 +68,10 @@
                     </p>
                 </div>
 
-                <button @click="openTambah = true; errors = {}" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition shadow-sm active:scale-95">
+                {{-- [SSO-DISABLED] Tombol Tambah hanya ditampilkan untuk Jenis Tenaga, Unit Kerja dikelola SSO --}}
+                <button x-show="type === 'tenaga'" @click="openTambah = true; errors = {}" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition shadow-sm active:scale-95">
                     <i class="fa-solid fa-plus text-xs"></i>
-                    <span x-text="type === 'unit' ? 'Tambah Unit' : 'Tambah Tenaga'"></span>
+                    <span x-text="'Tambah Tenaga'"></span>
                 </button>
             </div>
 
@@ -131,17 +132,25 @@
                                 </td>
                                 <td class="py-5 px-6 text-right">
                                     <div class="flex justify-end gap-5 text-gray-400 dark:text-white">
-                                        {{-- Edit Button --}}
-                                        <button @click="openEditModal(item)" 
-                                                class="hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-500 rounded-lg transition-all active:scale-90" title="Edit Data">
-                                            <i class="fa-solid fa-pen"></i>
-                                        </button>
+                                        {{-- [SSO-DISABLED] Edit & Delete hanya ditampilkan untuk Jenis Tenaga --}}
+                                        <template x-if="type === 'tenaga'">
+                                            <div class="flex justify-end gap-5">
+                                                {{-- Edit Button --}}
+                                                <button @click="openEditModal(item)" 
+                                                        class="hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-500 rounded-lg transition-all active:scale-90" title="Edit Data">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
 
-                                        {{-- Delete Button --}}
-                                        <button type="button" @click="confirmDelete(type === 'unit' ? item.unit_kerja_id : item.jenis_tenaga_id)" 
-                                                class="hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-500 rounded-lg transition-all active:scale-90" title="Hapus Data">
-                                            <i class="fa-solid fa-trash-can"></i>
-                                        </button>
+                                                {{-- Delete Button --}}
+                                                <button type="button" @click="confirmDelete(type === 'unit' ? item.unit_kerja_id : item.jenis_tenaga_id)" 
+                                                        class="hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-500 rounded-lg transition-all active:scale-90" title="Hapus Data">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </div>
+                                        </template>
+                                        <template x-if="type === 'unit'">
+                                            <span class="text-xs text-gray-400 dark:text-gray-500 italic">SSO</span>
+                                        </template>
                                     </div>
                                 </td>
                             </tr>
@@ -195,7 +204,8 @@
     </div>
 
     {{-- MODAL TAMBAH --}}
-    <div x-show="openTambah" 
+    {{-- [SSO-DISABLED] Modal Tambah hanya bisa dibuka untuk Jenis Tenaga --}}
+    <div x-show="openTambah && type === 'tenaga'" 
          class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" 
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 scale-95"
@@ -243,7 +253,8 @@
     </div>
 
     {{-- MODAL EDIT --}}
-    <div x-show="openEdit" 
+    {{-- [SSO-DISABLED] Modal Edit hanya bisa dibuka untuk Jenis Tenaga --}}
+    <div x-show="openEdit && type === 'tenaga'" 
          class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" 
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 scale-95"

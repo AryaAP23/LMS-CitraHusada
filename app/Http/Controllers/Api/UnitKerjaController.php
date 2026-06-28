@@ -48,9 +48,20 @@ class UnitKerjaController extends Controller
 
     /**
      * Menyimpan data baru.
+     * [PARTIALLY DISABLED] Unit Kerja dinonaktifkan (SSO). Jenis Tenaga tetap aktif.
      */
     public function store(Request $request)
     {
+        $type = $request->input('type');
+
+        // [SSO-DISABLED] Blokir create untuk Unit Kerja, data dikelola melalui SSO
+        if ($type === 'unit') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fitur tambah unit kerja dinonaktifkan. Data unit kerja dikelola melalui SSO.'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'type' => 'required|in:unit,tenaga',
             'name' => 'required|string|max:255',
@@ -64,21 +75,21 @@ class UnitKerjaController extends Controller
             ], 422);
         }
 
-        $type = $request->input('type');
-
         if ($type === 'tenaga') {
             $record = JenisTenaga::create([
                 'jenis_tenaga' => $request->name,
                 'deskripsi' => $request->deskripsi,
             ]);
             $this->logActivity($request, 'Create', 'jenis_tenagas', $record->jenis_tenaga_id, "Menambah jenis tenaga baru: " . $request->name);
-        } else {
-            $record = UnitKerja::create([
-                'unit_name' => $request->name,
-                'deskripsi' => $request->deskripsi,
-            ]);
-            $this->logActivity($request, 'Create', 'unit_kerjas', $record->unit_kerja_id, "Menambah unit kerja baru: " . $request->name);
         }
+        // [SSO-DISABLED] Kode asli Unit Kerja dinonaktifkan
+        // else {
+        //     $record = UnitKerja::create([
+        //         'unit_name' => $request->name,
+        //         'deskripsi' => $request->deskripsi,
+        //     ]);
+        //     $this->logActivity($request, 'Create', 'unit_kerjas', $record->unit_kerja_id, "Menambah unit kerja baru: " . $request->name);
+        // }
 
         return response()->json([
             'success' => true,
@@ -89,9 +100,20 @@ class UnitKerjaController extends Controller
 
     /**
      * Memperbarui data.
+     * [PARTIALLY DISABLED] Unit Kerja dinonaktifkan (SSO). Jenis Tenaga tetap aktif.
      */
     public function update(Request $request, $id)
     {
+        $type = $request->input('type');
+
+        // [SSO-DISABLED] Blokir update untuk Unit Kerja, data dikelola melalui SSO
+        if ($type === 'unit') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fitur edit unit kerja dinonaktifkan. Data unit kerja dikelola melalui SSO.'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'type' => 'required|in:unit,tenaga',
             'name' => 'required|string|max:255',
@@ -105,8 +127,6 @@ class UnitKerjaController extends Controller
             ], 422);
         }
 
-        $type = $request->input('type');
-
         if ($type === 'tenaga') {
             $record = JenisTenaga::find($id);
             if (!$record) return $this->notFoundResponse();
@@ -116,16 +136,18 @@ class UnitKerjaController extends Controller
                 'deskripsi' => $request->deskripsi,
             ]);
             $this->logActivity($request, 'Update', 'jenis_tenagas', $id, "Memperbarui jenis tenaga: " . $request->name);
-        } else {
-            $record = UnitKerja::find($id);
-            if (!$record) return $this->notFoundResponse();
-
-            $record->update([
-                'unit_name' => $request->name,
-                'deskripsi' => $request->deskripsi,
-            ]);
-            $this->logActivity($request, 'Update', 'unit_kerjas', $id, "Memperbarui unit kerja: " . $request->name);
         }
+        // [SSO-DISABLED] Kode asli Unit Kerja dinonaktifkan
+        // else {
+        //     $record = UnitKerja::find($id);
+        //     if (!$record) return $this->notFoundResponse();
+        //
+        //     $record->update([
+        //         'unit_name' => $request->name,
+        //         'deskripsi' => $request->deskripsi,
+        //     ]);
+        //     $this->logActivity($request, 'Update', 'unit_kerjas', $id, "Memperbarui unit kerja: " . $request->name);
+        // }
 
         return response()->json([
             'success' => true,
@@ -136,10 +158,19 @@ class UnitKerjaController extends Controller
 
     /**
      * Menghapus data.
+     * [PARTIALLY DISABLED] Unit Kerja dinonaktifkan (SSO). Jenis Tenaga tetap aktif.
      */
     public function destroy(Request $request, $id)
     {
         $type = $request->query('type'); // Ambil type dari query params untuk delete
+
+        // [SSO-DISABLED] Blokir delete untuk Unit Kerja, data dikelola melalui SSO
+        if ($type !== 'tenaga') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fitur hapus unit kerja dinonaktifkan. Data unit kerja dikelola melalui SSO.'
+            ], 403);
+        }
 
         if ($type === 'tenaga') {
             $record = JenisTenaga::find($id);
@@ -148,14 +179,16 @@ class UnitKerjaController extends Controller
             $nama = $record->jenis_tenaga;
             $record->delete();
             $this->logActivity($request, 'Delete', 'jenis_tenagas', $id, "Menghapus jenis tenaga: " . $nama);
-        } else {
-            $record = UnitKerja::find($id);
-            if (!$record) return $this->notFoundResponse();
-
-            $nama = $record->unit_name;
-            $record->delete();
-            $this->logActivity($request, 'Delete', 'unit_kerjas', $id, "Menghapus unit kerja: " . $nama);
         }
+        // [SSO-DISABLED] Kode asli Unit Kerja dinonaktifkan
+        // else {
+        //     $record = UnitKerja::find($id);
+        //     if (!$record) return $this->notFoundResponse();
+        //
+        //     $nama = $record->unit_name;
+        //     $record->delete();
+        //     $this->logActivity($request, 'Delete', 'unit_kerjas', $id, "Menghapus unit kerja: " . $nama);
+        // }
 
         return response()->json([
             'success' => true,
