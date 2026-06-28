@@ -82,12 +82,13 @@ Route::middleware($authMiddleware)->group(function () {
             // Manajemen Pengguna
             Route::get('/manajemen-pengguna', [\App\Http\Controllers\Api\ManajemenPenggunaController::class, 'index'])->name('manajemen-pengguna');
             Route::get('/manajemen-pengguna/impersonate/{id}', [\App\Http\Controllers\Api\ManajemenPenggunaController::class, 'impersonate'])->name('manajemen-pengguna.impersonate');
-            Route::get('/tambah-peran', function () {
-                $unit_kerjas = \App\Models\UnitKerja::all();
-                $jenis_tenagas = \App\Models\JenisTenaga::all();
-                $roles = \App\Models\Role::all();
-                return view('SuperAdmin_Views.tambah-peran', compact('unit_kerjas', 'jenis_tenagas', 'roles'));
-            })->name('tambah-peran');
+            // [SSO-DISABLED] Halaman tambah peran dinonaktifkan, data pengguna dikelola SSO
+            // Route::get('/tambah-peran', function () {
+            //     $unit_kerjas = \App\Models\UnitKerja::all();
+            //     $jenis_tenagas = \App\Models\JenisTenaga::all();
+            //     $roles = \App\Models\Role::all();
+            //     return view('SuperAdmin_Views.tambah-peran', compact('unit_kerjas', 'jenis_tenagas', 'roles'));
+            // })->name('tambah-peran');
 
             // Manajemen Cadangan
             Route::get('/cadangan', function () {
