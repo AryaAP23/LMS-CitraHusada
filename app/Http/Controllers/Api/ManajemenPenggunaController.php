@@ -62,93 +62,114 @@ class ManajemenPenggunaController extends Controller
 
     /**
      * API: Simpan Pengguna Baru
+     * [DISABLED] Fitur ini dinonaktifkan karena data pengguna dikelola melalui SSO Rumah Sakit.
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'nip' => 'required|string|max:50|unique:users,nip',
-            'password' => 'required|string|min:3',
-            'unit_kerja_id' => 'required|exists:unit_kerjas,unit_kerja_id',
-            'jenis_tenaga_id' => 'required|exists:jenis_tenagas,jenis_tenaga_id',
-            'roles' => 'required|array',
-        ]);
-
-        $status = $request->input('status', 'inactive');
-
-        $user = User::create([
-            'name' => $request->name,
-            'nip' => $request->nip,
-            'password' => Hash::make($request->password),
-            'total_jpl' => $request->total_jpl ?? 0,
-            'jenis_tenaga_id' => $request->jenis_tenaga_id,
-            'roles' => $request->roles,
-            'status' => $status,
-        ]);
-        if ($request->filled('unit_kerja_id')) {
-            $user->unitKerjas()->sync([$request->unit_kerja_id]);
-        }
-
-        $this->logActivity($request, 'Create', 'users', $user->user_id, "Menambah pengguna baru: [{$user->name}]");
-
         return response()->json([
-            'status' => 'success',
-            'message' => 'Pengguna berhasil ditambahkan'
-        ]);
+            'status' => 'error',
+            'message' => 'Fitur tambah pengguna dinonaktifkan. Data pengguna dikelola melalui SSO.'
+        ], 403);
+
+        // [SSO-DISABLED] Kode asli dinonaktifkan untuk production SSO
+        // $request->validate([
+        //     'name' => 'required|string|max:255',
+        //     'nip' => 'required|string|max:50|unique:users,nip',
+        //     'password' => 'required|string|min:3',
+        //     'unit_kerja_id' => 'required|exists:unit_kerjas,unit_kerja_id',
+        //     'jenis_tenaga_id' => 'required|exists:jenis_tenagas,jenis_tenaga_id',
+        //     'roles' => 'required|array',
+        // ]);
+        //
+        // $status = $request->input('status', 'inactive');
+        //
+        // $user = User::create([
+        //     'name' => $request->name,
+        //     'nip' => $request->nip,
+        //     'password' => Hash::make($request->password),
+        //     'total_jpl' => $request->total_jpl ?? 0,
+        //     'jenis_tenaga_id' => $request->jenis_tenaga_id,
+        //     'roles' => $request->roles,
+        //     'status' => $status,
+        // ]);
+        // if ($request->filled('unit_kerja_id')) {
+        //     $user->unitKerjas()->sync([$request->unit_kerja_id]);
+        // }
+        //
+        // $this->logActivity($request, 'Create', 'users', $user->user_id, "Menambah pengguna baru: [{$user->name}]");
+        //
+        // return response()->json([
+        //     'status' => 'success',
+        //     'message' => 'Pengguna berhasil ditambahkan'
+        // ]);
     }
 
     /**
      * API: Update Pengguna
+     * [DISABLED] Fitur ini dinonaktifkan karena data pengguna dikelola melalui SSO Rumah Sakit.
      */
     public function update(Request $request, $id)
     {
-        $user = User::findOrFail($id);
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'nip' => 'required|string|max:50|unique:users,nip,' . $user->user_id . ',user_id',
-            'unit_kerja_id' => 'required|exists:unit_kerjas,unit_kerja_id',
-            'jenis_tenaga_id' => 'required|exists:jenis_tenagas,jenis_tenaga_id',
-            'roles' => 'required|array',
-        ]);
-
-        $user->name = $request->name;
-        $user->nip = $request->nip;
-        
-        $user->jenis_tenaga_id = $request->jenis_tenaga_id;
-        $user->syncRoles($request->roles);
-        $user->status = $request->status;
-
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
-        }
-
-        $user->save();
-        if ($request->filled('unit_kerja_id')) { $user->unitKerjas()->sync([$request->unit_kerja_id]); }
-
-        $this->logActivity($request, 'Update', 'users', $id, "Memperbarui data pengguna: [{$user->name}]");
-
         return response()->json([
-            'status' => 'success',
-            'message' => 'Data pengguna berhasil diperbarui'
-        ]);
+            'status' => 'error',
+            'message' => 'Fitur edit pengguna dinonaktifkan. Data pengguna dikelola melalui SSO.'
+        ], 403);
+
+        // [SSO-DISABLED] Kode asli dinonaktifkan untuk production SSO
+        // $user = User::findOrFail($id);
+        //
+        // $request->validate([
+        //     'name' => 'required|string|max:255',
+        //     'nip' => 'required|string|max:50|unique:users,nip,' . $user->user_id . ',user_id',
+        //     'unit_kerja_id' => 'required|exists:unit_kerjas,unit_kerja_id',
+        //     'jenis_tenaga_id' => 'required|exists:jenis_tenagas,jenis_tenaga_id',
+        //     'roles' => 'required|array',
+        // ]);
+        //
+        // $user->name = $request->name;
+        // $user->nip = $request->nip;
+        // 
+        // $user->jenis_tenaga_id = $request->jenis_tenaga_id;
+        // $user->syncRoles($request->roles);
+        // $user->status = $request->status;
+        //
+        // if ($request->filled('password')) {
+        //     $user->password = Hash::make($request->password);
+        // }
+        //
+        // $user->save();
+        // if ($request->filled('unit_kerja_id')) { $user->unitKerjas()->sync([$request->unit_kerja_id]); }
+        //
+        // $this->logActivity($request, 'Update', 'users', $id, "Memperbarui data pengguna: [{$user->name}]");
+        //
+        // return response()->json([
+        //     'status' => 'success',
+        //     'message' => 'Data pengguna berhasil diperbarui'
+        // ]);
     }
 
     /**
      * API: Hapus Pengguna
+     * [DISABLED] Fitur ini dinonaktifkan karena data pengguna dikelola melalui SSO Rumah Sakit.
      */
     public function destroy(Request $request, $id)
     {
-        $user = User::findOrFail($id);
-        $nama = $user->name;
-        $user->delete();
-
-        $this->logActivity($request, 'Delete', 'users', $id, "Menghapus pengguna: [{$nama}]");
-
         return response()->json([
-            'status' => 'success',
-            'message' => 'Pengguna berhasil dihapus'
-        ]);
+            'status' => 'error',
+            'message' => 'Fitur hapus pengguna dinonaktifkan. Data pengguna dikelola melalui SSO.'
+        ], 403);
+
+        // [SSO-DISABLED] Kode asli dinonaktifkan untuk production SSO
+        // $user = User::findOrFail($id);
+        // $nama = $user->name;
+        // $user->delete();
+        //
+        // $this->logActivity($request, 'Delete', 'users', $id, "Menghapus pengguna: [{$nama}]");
+        //
+        // return response()->json([
+        //     'status' => 'success',
+        //     'message' => 'Pengguna berhasil dihapus'
+        // ]);
     }
 
     /**
